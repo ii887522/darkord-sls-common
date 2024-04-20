@@ -88,15 +88,7 @@ def convert_snake_case_to_pascal_case(src: str) -> str:
 
 def hash_secret(secret: str) -> tuple[str, str]:
     salt = os.urandom(32)
-
-    hash = hashlib.scrypt(
-        secret.encode(),
-        salt=salt,
-        n=16384,
-        r=8,
-        p=1,
-    )
-
+    hash = hashlib.scrypt(secret.encode(), salt=salt, n=16384, r=8, p=1)
     return hash.hex(), salt.hex()
 
 
@@ -145,3 +137,17 @@ def extend_current_timestamp(
         resp //= 1000
 
     return resp
+
+
+def deserialize_method_arn(method_arn: str) -> dict:
+    api_arn, stage, method, *path = method_arn.split("/")
+    path = "/".join(path)
+    return {"api_arn": api_arn, "stage": stage, "method": method, "path": path}
+
+
+def get_user_ip(event) -> str:
+    return event["requestContext"]["identity"]["sourceIp"]
+
+
+def get_user_ctx(event) -> dict:
+    return event["requestContext"]["authorizer"]
