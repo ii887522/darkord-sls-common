@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import os
 import secrets
@@ -33,7 +34,9 @@ API_ERR_MSG = {
 }
 
 
-def mask_sensitive(data, extra_sensitive_params: set[str] = set()):
+def mask_sensitive(
+    data, extra_sensitive_params: set[str] = set(), can_update_data=False
+):
     if data is None or isinstance(data, (bool, int, float, Decimal, str)):
         return data
 
@@ -46,12 +49,17 @@ def mask_sensitive(data, extra_sensitive_params: set[str] = set()):
     if isinstance(data, dict):
         sensitive_params = SENSITIVE_PARAMS.union(extra_sensitive_params)
 
+        if not can_update_data:
+            data = copy.deepcopy(data)
+
         for k in data:
             data[k] = (
                 "****"
                 if k in sensitive_params
                 else mask_sensitive(
-                    data=data[k], extra_sensitive_params=extra_sensitive_params
+                    data=data[k],
+                    extra_sensitive_params=extra_sensitive_params,
+                    can_update_data=True,
                 )
             )
 
