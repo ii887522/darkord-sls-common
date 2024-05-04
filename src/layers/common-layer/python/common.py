@@ -94,8 +94,8 @@ def convert_snake_case_to_pascal_case(src: str) -> str:
     return src.replace("_", " ").title().replace(" ", "")
 
 
-def hash_secret(secret: str) -> tuple[str, str]:
-    salt = os.urandom(32)
+def hash_secret(secret: str, salt=b"") -> tuple[str, str]:
+    salt = salt or os.urandom(32)
     hash = hashlib.scrypt(secret.encode(), salt=salt, n=16384, r=8, p=1)
     return hash.hex(), salt.hex()
 
