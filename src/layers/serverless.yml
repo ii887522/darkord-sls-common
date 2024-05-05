@@ -45,6 +45,19 @@ layers:
     allowedAccounts:
       - ${aws:accountId}
     retain: true
+  snoop-layer:
+    path: snoop-layer
+    package:
+      patterns:
+        - "snoop-layer/**"
+    compatibleRuntimes:
+      - python3.11
+    compatibleArchitectures:
+      - x86_64
+      - arm64
+    allowedAccounts:
+      - ${aws:accountId}
+    retain: true
 
 plugins:
   - serverless-better-credentials # Must be the first one in this list for this to work
