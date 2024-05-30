@@ -1,3 +1,0 @@
-services:
-  common-layer:
-    path: src/layers
