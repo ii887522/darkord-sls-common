@@ -1,14 +1,18 @@
 pub mod api_response;
+pub mod common_enums;
 pub mod common_error;
 pub mod common_serde;
 pub mod common_tracing;
 pub mod constants;
+pub mod method_arn;
 pub mod sensitive_data;
 pub mod trimmed_string;
 
 pub use api_response::ApiResponse;
 pub use common_error::CommonError;
+pub use method_arn::MethodArn;
 pub use sensitive_data::SensitiveData;
+pub use sensitive_data::SensitiveDataNewBuilder;
 pub use trimmed_string::TrimmedString;
 
 use anyhow::{Context, Result};

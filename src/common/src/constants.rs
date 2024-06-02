@@ -12,6 +12,7 @@ pub const SENSITIVE_KEYS: &[&str] = &[
     "jti",
     "verification_code",
     "authorization_token",
+    "Authorization",
 ];
 
 // Environment variables

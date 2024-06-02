@@ -1,5 +1,8 @@
 use crate::{constants, SensitiveData};
-use aws_lambda_events::apigw::ApiGatewayProxyRequest;
+use aws_lambda_events::apigw::{
+    ApiGatewayCustomAuthorizerRequest, ApiGatewayCustomAuthorizerRequestTypeRequest,
+    ApiGatewayProxyRequest,
+};
 use lambda_runtime::tracing::{
     info,
     subscriber::{self, EnvFilter},
@@ -50,6 +53,49 @@ impl Logger for ApiGatewayProxyRequest {
         // Reveal back the sensitive input for caller logic
         sensitive_event_body.show();
         self.body = Some(serde_json::to_string(sensitive_event_body.get())?);
+
+        Ok(())
+    }
+}
+
+impl Logger for ApiGatewayCustomAuthorizerRequest {
+    fn log(&mut self) -> Result<(), Error> {
+        // Hide sensitive input, but later need to reveal back for caller logic
+        let auth_token = self.authorization_token.take();
+
+        // Log the event
+        info!(event = serde_json::to_string(self)?);
+
+        // Reveal back the sensitive input for caller logic
+        self.authorization_token = auth_token;
+
+        Ok(())
+    }
+}
+
+impl Logger for ApiGatewayCustomAuthorizerRequestTypeRequest {
+    fn log(&mut self) -> Result<(), Error> {
+        // Hide sensitive input, but later need to reveal back for caller logic
+        let auth_token = self.headers.remove("Authorization");
+
+        // Hide sensitive input, assume caller no longer needs these keys for their logic
+        for &sensitive_key in constants::SENSITIVE_KEYS {
+            self.headers.remove(sensitive_key);
+            self.multi_value_headers.remove(sensitive_key);
+            self.path_parameters.remove(sensitive_key);
+        }
+        if let Some(identity) = &mut self.request_context.identity {
+            identity.api_key = None;
+            identity.api_key_id = None;
+        }
+
+        // Log the event
+        info!(event = serde_json::to_string(self)?);
+
+        // Reveal back the sensitive input for caller logic
+        if let Some(auth_token) = auth_token {
+            self.headers.append("Authorization", auth_token);
+        }
 
         Ok(())
     }
