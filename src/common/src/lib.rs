@@ -94,11 +94,9 @@ pub fn extend_current_timestamp(
 ) -> Result<u64> {
     // Convert and do everything in milliseconds to make logic simpler
 
-    let src_timestamp = if let Unit::Seconds = unit {
-        // src_timestamp is in seconds, need to convert to milliseconds
-        src_timestamp * 1000
-    } else {
-        src_timestamp
+    let src_timestamp = match unit {
+        Unit::Seconds => src_timestamp * 1000, // src_timestamp is in seconds, need to convert to milliseconds
+        Unit::Milliseconds => src_timestamp,
     };
 
     let src_timestamp = if src_timestamp == 0 {
@@ -119,10 +117,9 @@ pub fn extend_current_timestamp(
         + seconds * 1_000
         + milliseconds;
 
-    let later = if let Unit::Seconds = unit {
-        later / 1000
-    } else {
-        later
+    let later = match unit {
+        Unit::Seconds => later / 1000,
+        Unit::Milliseconds => later,
     };
 
     Ok(later)
