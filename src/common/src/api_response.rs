@@ -5,7 +5,6 @@ use aws_lambda_events::{
 };
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::mem;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct ApiResponse<'a, 'b> {
@@ -39,17 +38,13 @@ impl From<ApiResponse<'_, '_>> for ApiGatewayProxyResponse {
             api_resp.message = constants::API_ERR_MSG_MAP.get(&status_code).unwrap_or(&"");
         }
 
+        let body = serde_json::to_string(&api_resp).unwrap().into();
+
         let headers = HeaderMap::from_iter(
             [(CONTENT_TYPE, HeaderValue::from_static("application/json"))]
                 .into_iter()
-                .chain(
-                    mem::take(&mut api_resp.headers)
-                        .into_iter()
-                        .map(|(k, v)| (k.unwrap(), v)),
-                ),
+                .chain(api_resp.headers.into_iter().map(|(k, v)| (k.unwrap(), v))),
         );
-
-        let body = serde_json::to_string(&api_resp).unwrap().into();
 
         ApiGatewayProxyResponse {
             status_code,
