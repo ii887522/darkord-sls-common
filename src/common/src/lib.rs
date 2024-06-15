@@ -24,7 +24,10 @@ use scrypt::{
     },
     Scrypt,
 };
+use std::hash::DefaultHasher;
+use std::hash::Hasher;
 use std::{
+    hash::Hash,
     panic::Location,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -148,4 +151,10 @@ pub fn gen_secret_digits(#[optarg(6)] digit_count: u32) -> String {
         OsRng.next_u32() % 10i32.pow(digit_count) as u32,
         width = digit_count as usize
     )
+}
+
+pub fn hash(value: &impl Hash) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    value.hash(&mut hasher);
+    hasher.finish()
 }
