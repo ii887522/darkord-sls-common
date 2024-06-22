@@ -40,6 +40,10 @@ impl<'a> SensitiveData<'a> {
         &self.shown_value
     }
 
+    pub fn into_data(self) -> Map<String, Value> {
+        self.shown_value
+    }
+
     pub fn hide(&mut self) {
         // A stack of references to the sensitive data to be processed by the below logic
         let mut sensitive_data_stack = vec![SensitiveDataMut {

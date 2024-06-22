@@ -8,6 +8,7 @@ use lambda_runtime::tracing::{
     subscriber::{self, EnvFilter},
 };
 use serde_json::{Error, Map, Value};
+use std::mem;
 
 pub fn init() {
     subscriber::fmt()
@@ -75,9 +76,6 @@ impl Logger for ApiGatewayCustomAuthorizerRequest {
 
 impl Logger for ApiGatewayCustomAuthorizerRequestTypeRequest {
     fn log(&mut self) -> Result<(), Error> {
-        // Hide sensitive input, but later need to reveal back for caller logic
-        let auth_token = self.headers.remove("Authorization");
-
         // Hide sensitive input, assume caller no longer needs these keys for their logic
         for &sensitive_key in constants::SENSITIVE_KEYS {
             self.headers.remove(sensitive_key);
@@ -89,6 +87,9 @@ impl Logger for ApiGatewayCustomAuthorizerRequestTypeRequest {
             identity.api_key_id = None;
         }
 
+        // Hide sensitive input, but later need to reveal back for caller logic
+        let auth_token = self.headers.remove("Authorization");
+
         // Log the event
         info!(event = serde_json::to_string(self)?);
 
@@ -96,6 +97,25 @@ impl Logger for ApiGatewayCustomAuthorizerRequestTypeRequest {
         if let Some(auth_token) = auth_token {
             self.headers.append("Authorization", auth_token);
         }
+
+        Ok(())
+    }
+}
+
+impl Logger for Value {
+    fn log(&mut self) -> Result<(), Error> {
+        // Hide sensitive input, but later need to reveal back for caller logic
+        let mut sensitive_event_body =
+            SensitiveData::new(mem::take(self.as_object_mut().unwrap_or(&mut Map::new()))).call();
+
+        sensitive_event_body.hide();
+
+        // Log the event
+        info!(event = serde_json::to_string(sensitive_event_body.get())?);
+
+        // Reveal back the sensitive input for caller logic
+        sensitive_event_body.show();
+        *self = Value::Object(sensitive_event_body.into_data());
 
         Ok(())
     }

@@ -24,10 +24,8 @@ use scrypt::{
     },
     Scrypt,
 };
-use std::hash::DefaultHasher;
-use std::hash::Hasher;
 use std::{
-    hash::Hash,
+    hash::{Hash, Hasher, DefaultHasher},
     panic::Location,
     time::{SystemTime, UNIX_EPOCH},
 };
