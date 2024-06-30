@@ -15,7 +15,8 @@ pub use sensitive_data::SensitiveData;
 pub use sensitive_data::SensitiveDataNewBuilder;
 pub use trimmed_string::TrimmedString;
 
-use anyhow::{Context, Result};
+use anyhow::{Context as _, Result};
+use lambda_runtime::Context;
 use optarg2chain::optarg_fn;
 use scrypt::{
     password_hash::{
@@ -25,7 +26,7 @@ use scrypt::{
     Scrypt,
 };
 use std::{
-    hash::{Hash, Hasher, DefaultHasher},
+    hash::{DefaultHasher, Hash, Hasher},
     panic::Location,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -84,46 +85,88 @@ pub fn get_current_timestamp(#[optarg_default] unit: Unit) -> Result<u64> {
 #[optarg_fn(ExtendCurrentTimestampBuilder, call)]
 pub fn extend_current_timestamp(
     #[optarg_default] src_timestamp: u64,
-    #[optarg_default] years: u64,
-    #[optarg_default] months: u64,
-    #[optarg_default] days: u64,
-    #[optarg_default] hours: u64,
-    #[optarg_default] minutes: u64,
-    #[optarg_default] seconds: u64,
-    #[optarg_default] milliseconds: u64,
+    #[optarg_default] years: i64,
+    #[optarg_default] months: i64,
+    #[optarg_default] days: i64,
+    #[optarg_default] hours: i64,
+    #[optarg_default] minutes: i64,
+    #[optarg_default] seconds: i64,
+    #[optarg_default] milliseconds: i64,
     #[optarg_default] unit: Unit,
 ) -> Result<u64> {
     // Convert and do everything in milliseconds to make logic simpler
-
-    let src_timestamp = match unit {
+    let src_timestamp_ms = match unit {
         Unit::Seconds => src_timestamp * 1000, // src_timestamp is in seconds, need to convert to milliseconds
         Unit::Milliseconds => src_timestamp,
     };
 
-    let src_timestamp = if src_timestamp == 0 {
+    let src_timestamp_ms = if src_timestamp_ms == 0 {
         get_current_timestamp()
             .unit(Unit::Milliseconds)
             .call()
             .context(Location::caller())?
     } else {
-        src_timestamp
+        src_timestamp_ms
     };
 
-    let later = src_timestamp
-        + years * 31_536_000_000
-        + months * 2_592_000_000
-        + days * 86_400_000
-        + hours * 3_600_000
-        + minutes * 60_000
-        + seconds * 1_000
-        + milliseconds;
+    let years_ms = years * 31_536_000_000;
+    let months_ms = months * 2_592_000_000;
+    let days_ms = days * 86_400_000;
+    let hours_ms = hours * 3_600_000;
+    let minutes_ms = minutes * 60_000;
+    let seconds_ms = seconds * 1_000;
+    let milliseconds_ms = milliseconds;
 
-    let later = match unit {
-        Unit::Seconds => later / 1000,
-        Unit::Milliseconds => later,
+    let result_ms = src_timestamp_ms;
+
+    let result_ms = if years_ms >= 0 {
+        result_ms + years_ms as u64
+    } else {
+        result_ms - (-years_ms) as u64
     };
 
-    Ok(later)
+    let result_ms = if months_ms >= 0 {
+        result_ms + months_ms as u64
+    } else {
+        result_ms - (-months_ms) as u64
+    };
+
+    let result_ms = if days_ms >= 0 {
+        result_ms + days_ms as u64
+    } else {
+        result_ms - (-days_ms) as u64
+    };
+
+    let result_ms = if hours_ms >= 0 {
+        result_ms + hours_ms as u64
+    } else {
+        result_ms - (-hours_ms) as u64
+    };
+
+    let result_ms = if minutes_ms >= 0 {
+        result_ms + minutes_ms as u64
+    } else {
+        result_ms - (-minutes_ms) as u64
+    };
+
+    let result_ms = if seconds_ms >= 0 {
+        result_ms + seconds_ms as u64
+    } else {
+        result_ms - (-seconds_ms) as u64
+    };
+
+    let result_ms = if milliseconds_ms >= 0 {
+        result_ms + milliseconds_ms as u64
+    } else {
+        result_ms - (-milliseconds_ms) as u64
+    };
+
+    let result = match unit {
+        Unit::Seconds => result_ms / 1000,
+        Unit::Milliseconds => result_ms,
+    };
+
+    Ok(result)
 }
 
 pub fn hash_secret(secret: &str) -> String {
@@ -155,4 +198,23 @@ pub fn hash(value: &impl Hash) -> u64 {
     let mut hasher = DefaultHasher::new();
     value.hash(&mut hasher);
     hasher.finish()
+}
+
+#[optarg_fn(IsAlmostTimeoutBuilder, call)]
+pub fn is_almost_timeout<'a>(
+    context: &'a Context,
+    #[optarg(1)] seconds_before_timeout: i64,
+) -> Result<bool> {
+    let result = get_current_timestamp()
+        .unit(Unit::Milliseconds)
+        .call()
+        .context(Location::caller())?
+        >= extend_current_timestamp()
+            .src_timestamp(context.deadline)
+            .unit(Unit::Milliseconds)
+            .seconds(-seconds_before_timeout)
+            .call()
+            .context(Location::caller())?;
+
+    Ok(result)
 }
