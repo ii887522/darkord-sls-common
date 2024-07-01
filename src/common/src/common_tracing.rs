@@ -7,7 +7,7 @@ use lambda_runtime::tracing::{
     info,
     subscriber::{self, EnvFilter},
 };
-use serde_json::{Error, Map, Value};
+use serde_json::{json, Error, Map, Value};
 use std::mem;
 
 pub fn init() {
@@ -115,7 +115,7 @@ impl Logger for Value {
 
         // Reveal back the sensitive input for caller logic
         sensitive_event_body.show();
-        *self = Value::Object(sensitive_event_body.into_data());
+        *self = json!(sensitive_event_body.into_data());
 
         Ok(())
     }
