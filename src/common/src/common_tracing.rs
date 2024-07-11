@@ -12,6 +12,7 @@ use std::mem;
 
 pub fn init() {
     subscriber::fmt()
+        .json()
         .with_env_filter(EnvFilter::from_default_env())
         .with_level(true)
         .with_file(true)
