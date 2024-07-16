@@ -7,35 +7,38 @@ use serde::Serialize;
 use serde_json::{json, Value};
 
 #[derive(Debug, PartialEq, Serialize)]
-pub struct ApiResponse<'a, 'b> {
+pub struct ApiResponse<'a> {
     pub code: u32,
 
     #[serde(skip)]
     pub headers: HeaderMap<HeaderValue>,
 
-    pub message: &'a str,
+    pub message: String,
     pub payload: Value,
-    pub request_id: &'b str,
+    pub request_id: &'a str,
 }
 
-impl Default for ApiResponse<'_, '_> {
+impl Default for ApiResponse<'_> {
     fn default() -> Self {
         Self {
             code: 2000,
             headers: HeaderMap::new(),
-            message: "",
+            message: "".to_string(),
             payload: json!({}),
             request_id: "",
         }
     }
 }
 
-impl From<ApiResponse<'_, '_>> for ApiGatewayProxyResponse {
-    fn from(mut api_resp: ApiResponse<'_, '_>) -> Self {
+impl From<ApiResponse<'_>> for ApiGatewayProxyResponse {
+    fn from(mut api_resp: ApiResponse<'_>) -> Self {
         let status_code = api_resp.code.to_string()[..3].parse().unwrap();
 
         if api_resp.message.is_empty() {
-            api_resp.message = constants::API_ERR_MSG_MAP.get(&status_code).unwrap_or(&"");
+            api_resp.message = constants::API_ERR_MSG_MAP
+                .get(&status_code)
+                .unwrap_or(&"")
+                .to_string();
         }
 
         let body = serde_json::to_string(&api_resp).unwrap().into();

@@ -6,14 +6,14 @@ use std::{
     fmt::{self, Display, Formatter},
 };
 
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct CommonError<'a> {
+#[derive(Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct CommonError {
     pub code: u32,
-    pub message: &'a str,
+    pub message: String,
 }
 
-impl<'a> CommonError<'a> {
-    pub fn into_api_resp(self, request_id: &str) -> ApiResponse<'a, '_> {
+impl CommonError {
+    pub fn into_api_resp(self, request_id: &str) -> ApiResponse<'_> {
         ApiResponse {
             code: self.code,
             headers: HeaderMap::new(),
@@ -24,10 +24,10 @@ impl<'a> CommonError<'a> {
     }
 }
 
-impl Display for CommonError<'_> {
+impl Display for CommonError {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         write!(formatter, "{self:?}")
     }
 }
 
-impl Error for CommonError<'_> {}
+impl Error for CommonError {}
