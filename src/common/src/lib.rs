@@ -23,7 +23,7 @@ use scrypt::{
         rand_core::{OsRng, RngCore},
         PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
     },
-    Scrypt,
+    Params, Scrypt,
 };
 use std::{
     hash::{DefaultHasher, Hash, Hasher},
@@ -171,7 +171,13 @@ pub fn extend_current_timestamp(
 
 pub fn hash_secret(secret: &str) -> String {
     Scrypt
-        .hash_password(secret.as_bytes(), &SaltString::generate(&mut OsRng))
+        .hash_password_customized(
+            secret.as_bytes(),
+            None,
+            None,
+            Params::new(15, 8, 1, 32).unwrap(),
+            &SaltString::generate(&mut OsRng),
+        )
         .unwrap()
         .to_string()
 }
