@@ -1,20 +1,23 @@
 [package]
 name = "common"
+description = "Some reusable assets that support microservices development of Darkord"
+version = "1.0.0"
 edition = "2021"
-rust-version = "1.78"
+rust-version = "1.80"
+repository = "https://github.com/ii887522/darkord-sls-common"
 
 [lints.rust]
 unsafe_code = "forbid"
 
 [dependencies]
-anyhow = "1.0"
+anyhow = { version = "1.0", default-features = false, features = ["std"] }
 lambda_runtime = "0.11.2"
-once_cell = "1.19"
-optarg2chain = "0.1.0"
+once_cell = { version = "1.19", default-features = false }
+optarg2chain = { version = "0.1.0", default-features = false }
 scrypt = "0.11.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-validator = "0.18.1"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0", default-features = false }
+validator = { version = "0.18.1", default-features = false }
 
 [dependencies.aws_lambda_events]
 version = "0.15.1"
