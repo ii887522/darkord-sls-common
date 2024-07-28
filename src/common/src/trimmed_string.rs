@@ -42,7 +42,7 @@ struct TrimmedStringVisitor;
 impl<'de> Visitor<'de> for TrimmedStringVisitor {
     type Value = TrimmedString;
 
-    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         formatter.write_str("string")
     }
 

@@ -25,7 +25,7 @@ impl CommonError {
 }
 
 impl Display for CommonError {
-    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         write!(formatter, "{self:?}")
     }
 }

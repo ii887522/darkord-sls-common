@@ -1,3 +1,5 @@
+#![deny(elided_lifetimes_in_paths)]
+
 pub mod api_response;
 pub mod common_enums;
 pub mod common_error;
