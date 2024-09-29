@@ -213,16 +213,17 @@ pub fn is_almost_timeout<'a>(
     context: &'a Context,
     #[optarg(1)] seconds_before_timeout: i64,
 ) -> Result<bool> {
-    let result = get_current_timestamp()
+    let now = get_current_timestamp()
         .unit(Unit::Milliseconds)
         .call()
-        .context(Location::caller())?
-        >= extend_current_timestamp()
-            .src_timestamp(context.deadline)
-            .unit(Unit::Milliseconds)
-            .seconds(-seconds_before_timeout)
-            .call()
-            .context(Location::caller())?;
+        .context(Location::caller())?;
 
-    Ok(result)
+    let almost_deadline = extend_current_timestamp()
+        .src_timestamp(context.deadline)
+        .unit(Unit::Milliseconds)
+        .seconds(-seconds_before_timeout)
+        .call()
+        .context(Location::caller())?;
+
+    Ok(now >= almost_deadline)
 }

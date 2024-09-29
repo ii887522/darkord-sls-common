@@ -35,10 +35,9 @@ impl From<ApiResponse<'_>> for ApiGatewayProxyResponse {
         let status_code = api_resp.code.to_string()[..3].parse().unwrap();
 
         if api_resp.message.is_empty() {
-            api_resp.message = constants::API_ERR_MSG_MAP
-                .get(&status_code)
-                .unwrap_or(&"")
-                .to_string();
+            api_resp.message = constants::API_ERR_MSG_MAP.with(|api_err_msg_map| {
+                api_err_msg_map.get(&status_code).unwrap_or(&"").to_string()
+            });
         }
 
         let body = serde_json::to_string(&api_resp).unwrap().into();
