@@ -69,18 +69,20 @@ impl<'a> SensitiveData<'a> {
             let mut sensitive_data_map = HashMap::with_capacity(sensitive_data.shown_value.len());
 
             for (k, v) in sensitive_data.shown_value {
-                if let Value::Object(sv) = v {
-                    sensitive_data
-                        .hidden_value
-                        .insert(k.to_string(), json!(Map::with_capacity(sv.len())));
+                let Value::Object(sv) = v else {
+                    continue;
+                };
 
-                    let v = OptionalSensitiveDataMut {
-                        hidden_value: None,
-                        shown_value: Some(sv),
-                    };
+                sensitive_data
+                    .hidden_value
+                    .insert(k.to_string(), json!(Map::with_capacity(sv.len())));
 
-                    sensitive_data_map.insert(k, v);
-                }
+                let v = OptionalSensitiveDataMut {
+                    hidden_value: None,
+                    shown_value: Some(sv),
+                };
+
+                sensitive_data_map.insert(k, v);
             }
 
             for (k, v) in sensitive_data.hidden_value {
@@ -122,14 +124,16 @@ impl<'a> SensitiveData<'a> {
             let mut sensitive_data_map = HashMap::with_capacity(sensitive_data.hidden_value.len());
 
             for (k, v) in sensitive_data.hidden_value {
-                if let Value::Object(hv) = v {
-                    let v = OptionalSensitiveDataMut {
-                        hidden_value: Some(hv),
-                        shown_value: None,
-                    };
+                let Value::Object(hv) = v else {
+                    continue;
+                };
 
-                    sensitive_data_map.insert(k, v);
-                }
+                let v = OptionalSensitiveDataMut {
+                    hidden_value: Some(hv),
+                    shown_value: None,
+                };
+
+                sensitive_data_map.insert(k, v);
             }
 
             for (k, v) in sensitive_data.shown_value {
